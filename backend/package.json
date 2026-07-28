@@ -1,0 +1,23 @@
+{
+  "name": "alpha-backend",
+  "version": "1.0.0",
+  "description": "Secure AI Prompt Optimization Gateway",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@fastify/cors": "^10.0.1",
+    "@google/genai": "^2.10.0",
+    "dotenv": "^16.4.5",
+    "fastify": "^5.2.0",
+    "ioredis": "^5.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.24",
+    "tsx": "^4.7.1",
+    "typescript": "^5.3.3"
+  }
+}

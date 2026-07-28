@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Alpha Configuration</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(180deg, #4c0d06 0%, #a1320d 100%);
+      --card-bg: #000000;
+      --glass-bg: rgba(255, 255, 255, 0.08);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --text-main: #ffffff;
+      --text-sub: rgba(255, 255, 255, 0.7);
+      --text-sub-dark: rgba(255, 255, 255, 0.45);
+      --primary: #e04b16;
+      --primary-hover: #ff5b24;
+      --success: #10b981;
+      --error: #ef4444;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-sizing: border-box;
+    }
+
+    .options-container {
+      width: 350px;
+      height: 480px;
+      background: var(--bg-gradient);
+      border-radius: 32px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+      box-sizing: border-box;
+    }
+
+    .top-section {
+      padding: 24px 20px 0 20px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      justify-content: flex-start;
+      align-items: center;
+      box-sizing: border-box;
+      text-align: center;
+    }
+
+    .header {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      margin-bottom: 25px;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+    }
+
+    .cog-outer {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    .cog-ring {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      border: 2px dashed rgba(255, 255, 255, 0.15);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    }
+
+    .cog-solid {
+      width: 85px;
+      height: 85px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #e04b16 0%, #aa1a0f 100%);
+      border: 3px solid rgba(255, 255, 255, 0.18);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25), inset 0 2px 6px rgba(255, 255, 255, 0.15);
+    }
+
+    .cog-solid svg {
+      width: 44px;
+      height: 44px;
+      fill: #ffffff;
+      animation: spin 8s linear infinite;
+    }
+
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Bottom Curved Card Sheet */
+    .bottom-sheet {
+      background: var(--card-bg);
+      border-radius: 30px 30px 0 0;
+      padding: 24px 24px 20px 24px;
+      height: 250px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-sizing: border-box;
+      box-shadow: 0 -10px 32px rgba(0, 0, 0, 0.25);
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .input-label {
+      font-size: 11px;
+      color: var(--text-sub-dark);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 10px 14px;
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(224, 75, 22, 0.2);
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    button {
+      flex: 1;
+      height: 38px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #e04b16 0%, #aa1a0f 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(224, 75, 22, 0.25);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 6px 16px rgba(224, 75, 22, 0.4);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.98);
+    }
+
+    .btn-secondary {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      color: var(--text-main);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .btn-secondary:active {
+      transform: scale(0.98);
+    }
+
+    .status {
+      font-size: 11px;
+      margin-top: 8px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      display: none;
+      text-align: center;
+      font-weight: 500;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .status.success {
+      display: block;
+      background: rgba(16, 185, 129, 0.08);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.15);
+    }
+
+    .status.error {
+      display: block;
+      background: rgba(239, 68, 68, 0.08);
+      color: var(--error);
+      border: 1px solid rgba(239, 68, 68, 0.15);
+    }
+  </style>
+</head>
+<body>
+  <div class="options-container">
+    <!-- Top Section -->
+    <div class="top-section">
+      <div class="header">
+        <h1>Settings</h1>
+      </div>
+      
+      <!-- Spinning Cog Dial -->
+      <div class="cog-outer">
+        <div class="cog-ring">
+          <div class="cog-solid">
+            <svg viewBox="0 0 24 24">
+              <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom sheet curved black card -->
+    <div class="bottom-sheet">
+      <div class="input-group">
+        <div class="input-label">Gateway Endpoint</div>
+        <input type="url" id="backend-url" placeholder="http://127.0.0.1:3000" required>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn-secondary" id="btn-test">Test Connection</button>
+        <button class="btn-primary" id="btn-save">Save Settings</button>
+      </div>
+
+      <div class="status" id="status-box"></div>
+    </div>
+  </div>
+  <script src="options.js"></script>
+</body>
+</html>

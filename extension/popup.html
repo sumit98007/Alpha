@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Alpha Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(180deg, #4c0d06 0%, #a1320d 100%);
+      --card-bg: #000000;
+      --glass-bg: rgba(255, 255, 255, 0.08);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --text-main: #ffffff;
+      --text-sub: rgba(255, 255, 255, 0.7);
+      --text-sub-dark: rgba(255, 255, 255, 0.45);
+      --success: #10b981;
+    }
+
+    body {
+      margin: 0;
+      width: 340px;
+      height: 480px;
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+    }
+
+    .top-section {
+      padding: 24px 20px 0 20px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      justify-content: flex-start;
+      box-sizing: border-box;
+    }
+
+    /* Header styling */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: #ef4444;
+      box-shadow: 0 0 6px #ef4444;
+      transition: all 0.3s ease;
+    }
+
+    .status-dot.online {
+      background-color: var(--success);
+      box-shadow: 0 0 8px var(--success);
+    }
+
+    /* Circular Dial */
+    .dial-outer {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 10px;
+      position: relative;
+    }
+
+    .dial-ring {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      border: 2px dashed rgba(255, 255, 255, 0.15);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    }
+
+    .dial-solid {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #e04b16 0%, #aa1a0f 100%);
+      border: 3px solid rgba(255, 255, 255, 0.18);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25), inset 0 2px 6px rgba(255, 255, 255, 0.15);
+    }
+
+    .dial-value {
+      font-size: 38px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -1px;
+    }
+
+    .dial-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      color: var(--text-sub);
+      margin-top: 2px;
+      text-transform: uppercase;
+    }
+
+    /* Bottom Curved Sheet Card */
+    .bottom-sheet {
+      background: var(--card-bg);
+      border-radius: 30px 30px 0 0;
+      padding: 20px 24px;
+      height: 205px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-sizing: border-box;
+      box-shadow: 0 -10px 32px rgba(0, 0, 0, 0.25);
+    }
+
+    .sheet-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+    }
+
+    .sheet-row:first-child {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .sheet-label {
+      font-size: 13px;
+      color: var(--text-sub-dark);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .sheet-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    /* Toggle switch styling */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: .3s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    input:checked + .slider {
+      background-color: var(--success);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
+    /* Floating Navigation Pill Dock */
+    .dock-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .dock {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      width: 200px;
+      height: 44px;
+      background: rgba(255, 255, 255, 0.07);
+      backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 9999px;
+      padding: 0 10px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .dock-btn {
+      background: none;
+      border: none;
+      color: var(--text-sub-dark);
+      cursor: pointer;
+      padding: 6px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 50%;
+      transition: all 0.2s ease;
+    }
+
+    .dock-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .dock-btn:active {
+      transform: scale(0.95);
+    }
+
+    .dock-btn.active {
+      background: white;
+      color: #9e310d;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    .dock-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+  </style>
+</head>
+<body>
+  <!-- Top Section (Gradient BG) -->
+  <div class="top-section">
+    <div class="header">
+      <h1>Session</h1>
+      <div class="status-badge">
+        <div class="status-dot" id="status-dot"></div>
+        <span id="status-text">Offline</span>
+      </div>
+    </div>
+
+    <!-- Circular Dial -->
+    <div class="dial-outer">
+      <div class="dial-ring">
+        <div class="dial-solid">
+          <div class="dial-value" id="stat-optimized">00</div>
+          <div class="dial-label">Enhanced</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Sheet (Solid Black Card with Curved Boundary) -->
+  <div class="bottom-sheet">
+    <div class="sheet-row">
+      <div class="sheet-label">Protection Mode</div>
+      <label class="switch">
+        <input type="checkbox" id="toggle-active" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="sheet-row">
+      <div class="sheet-label">Redacted Secrets</div>
+      <div class="sheet-value" id="stat-redacted">00</div>
+    </div>
+
+    <!-- Floating Dock inside curved card -->
+    <div class="dock-container">
+      <div class="dock">
+        <!-- Dashboard Button -->
+        <button class="dock-btn active" id="btn-home" title="Dashboard">
+          <svg viewBox="0 0 24 24">
+            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+          </svg>
+        </button>
+        <!-- Settings Button -->
+        <button class="dock-btn" id="btn-settings" title="Settings">
+          <svg viewBox="0 0 24 24">
+            <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+          </svg>
+        </button>
+        <!-- Reset Button -->
+        <button class="dock-btn" id="btn-reset" title="Reset Stats">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm-1.1 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L4.14 7.74C3.46 8.97 3 10.43 3 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

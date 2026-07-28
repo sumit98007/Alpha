@@ -1,0 +1,55 @@
+{
+  "manifest_version": 3,
+  "name": "Alpha - Secure Prompt Optimizer",
+  "version": "1.0.0",
+  "description": "Intercepts prompts to redact sensitive data locally and optimize inputs via Gemini 2.5 Flash.",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://chatgpt.com/*",
+    "https://*.chatgpt.com/*",
+    "https://claude.ai/*",
+    "https://*.claude.ai/*",
+    "https://gemini.google.com/*",
+    "https://*.gemini.google.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://*.chatgpt.com/*",
+        "https://claude.ai/*",
+        "https://*.claude.ai/*",
+        "https://gemini.google.com/*",
+        "https://*.gemini.google.com/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Alpha Prompt Optimizer"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["styles.css"],
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://*.chatgpt.com/*",
+        "https://claude.ai/*",
+        "https://*.claude.ai/*",
+        "https://gemini.google.com/*",
+        "https://*.gemini.google.com/*"
+      ]
+    }
+  ]
+}
