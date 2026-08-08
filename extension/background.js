@@ -63,7 +63,7 @@ function generateUUID() {
 }
 
 // Local DLP Redaction Engine
-function redactSecrets(text) {
+function redactSecrets(text, placeholderPrefix = 'ALPHA_SECRET') {
   let scrubbedText = text;
   const redactionLog = [];
   const sessionSecrets = {};
@@ -79,7 +79,7 @@ function redactSecrets(text) {
         continue;
       }
 
-      const placeholder = `{{ALPHA_SECRET_${placeholderCount++}}}`;
+      const placeholder = `{{${placeholderPrefix}_${placeholderCount++}}}`;
       sessionSecrets[placeholder] = matchStr;
 
       redactionLog.push({
@@ -103,21 +103,88 @@ function hydratePrompt(optimizedText, sessionSecrets) {
   });
 }
 
+function estimateTokens(text) {
+  return Math.max(1, Math.ceil(text.length / 4));
+}
+
+function gatewayHeaders(apiKey) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (apiKey) headers['X-Alpha-Key'] = apiKey;
+  return headers;
+}
+
 // Listener for content script and popup messaging
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'createChatEnvironment') {
+    const purpose = typeof message.purpose === 'string' ? message.purpose.trim() : '';
+    const platform = message.platform || 'generic';
+    if (!purpose) {
+      sendResponse({ success: false, error: 'Describe what this chat is for.' });
+      return false;
+    }
+
+    const { scrubbedText: scrubbedPurpose, redactionLog } = redactSecrets(purpose);
+    const sessionId = generateUUID();
+
+    chrome.storage.local.get({
+      backendUrl: 'http://127.0.0.1:3000',
+      gatewayApiKey: '',
+      chatEnvironments: {},
+      redactedCount: 0
+    }, async (settings) => {
+      try {
+        const response = await fetch(`${settings.backendUrl}/api/environment`, {
+          method: 'POST',
+          headers: gatewayHeaders(settings.gatewayApiKey),
+          body: JSON.stringify({
+            sessionId,
+            meta: { hostPlatform: platform },
+            payload: { scrubbedPurpose }
+          })
+        });
+        if (!response.ok) throw new Error(`Gateway returned HTTP ${response.status}`);
+
+        const data = await response.json();
+        const chatEnvironments = {
+          ...settings.chatEnvironments,
+          [platform]: {
+            purpose,
+            environmentText: data.environmentText,
+            updatedAt: Date.now()
+          }
+        };
+        await chrome.storage.local.set({
+          chatEnvironments,
+          redactedCount: settings.redactedCount + redactionLog.length
+        });
+        sendResponse({ success: true, environment: chatEnvironments[platform] });
+      } catch (err) {
+        sendResponse({ success: false, error: `Backend Gateway error: ${err.message}` });
+      }
+    });
+    return true;
+  }
+
   if (message.action === 'enhancePrompt') {
-    const { text, platform } = message;
-    
-    // 1. Run local DLP check
-    const { scrubbedText, redactionLog, sessionSecrets } = redactSecrets(text);
+    const { text, platform, preferences = {}, conversationContext = '' } = message;
     const sessionId = generateUUID();
 
     // 2. Fetch the backend URL from storage
     chrome.storage.local.get({
       backendUrl: 'http://127.0.0.1:3000',
+      gatewayApiKey: '',
       redactedCount: 0,
       optimizedCount: 0,
-      enabled: true
+      enabled: true,
+      enhancementMode: 'balanced',
+      taskField: 'auto',
+      protectSensitive: true,
+      preserveVoice: true,
+      askClarifying: true,
+      qualityChecks: true,
+      useChatContext: false,
+      customGuidance: '',
+      chatEnvironments: {}
     }, async (settings) => {
       // If the extension is disabled, return original text
       if (!settings.enabled) {
@@ -125,16 +192,32 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return;
       }
 
-      // Check if we redacted anything
-      const secretsCount = redactionLog.length;
+      // Run local protection only when the user has enabled it.
+      const protection = settings.protectSensitive
+        ? redactSecrets(text)
+        : { scrubbedText: text, redactionLog: [], sessionSecrets: {} };
+      const { scrubbedText, redactionLog, sessionSecrets } = protection;
+      const contextProtection = settings.useChatContext && typeof conversationContext === 'string'
+        ? redactSecrets(conversationContext.slice(-12000), 'ALPHA_CONTEXT_SECRET')
+        : { scrubbedText: '', redactionLog: [] };
+      const scrubbedConversationContext = contextProtection.scrubbedText;
+      const secretsCount = redactionLog.length + contextProtection.redactionLog.length;
+      const savedEnvironment = settings.chatEnvironments[platform]?.environmentText || '';
+      const customGuidance = typeof settings.customGuidance === 'string'
+        ? settings.customGuidance.trim()
+        : '';
+      const scrubbedGuidance = settings.protectSensitive && customGuidance
+        ? redactSecrets(customGuidance).scrubbedText
+        : customGuidance;
+      const chatEnvironment = [savedEnvironment, scrubbedGuidance]
+        .filter(Boolean)
+        .join('\n\nAdditional user guidance:\n');
 
       // 3. Make API call to Cloud Gateway
       try {
         const response = await fetch(`${settings.backendUrl}/api/enhance`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: gatewayHeaders(settings.gatewayApiKey),
           body: JSON.stringify({
             sessionId,
             meta: {
@@ -144,6 +227,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             payload: {
               scrubbedText,
               redactionLog
+            },
+            preferences: {
+              mode: preferences.mode || settings.enhancementMode || 'balanced',
+              taskType: preferences.taskType || settings.taskField || 'auto',
+              chatEnvironment,
+              preserveVoice: settings.preserveVoice,
+              askClarifying: settings.askClarifying,
+              qualityChecks: settings.qualityChecks,
+              conversationContext: scrubbedConversationContext
             }
           })
         });
@@ -170,7 +262,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           success: true,
           text: hydratedText,
           cached: data.cached || false,
-          redactedThisSession: secretsCount
+          redactedThisSession: secretsCount,
+          mode: data.mode || preferences.mode || settings.enhancementMode || 'balanced',
+          taskType: data.taskType || preferences.taskType || settings.taskField || 'auto',
+          estimatedTokens: data.estimatedTokens || estimateTokens(hydratedText),
+          originalEstimatedTokens: estimateTokens(text),
+          degraded: data.degraded === true,
+          contextUsed: Boolean(scrubbedConversationContext)
         });
       } catch (err) {
         console.error('Enhancement error:', err);

@@ -3,20 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <title>Alpha Configuration</title>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    @font-face {
+      font-family: "Boldonse";
+      src: url("assets/fonts/Boldonse-Regular.ttf") format("truetype");
+      font-display: swap;
+    }
     :root {
-      --bg-gradient: linear-gradient(180deg, #4c0d06 0%, #a1320d 100%);
+      --bg-gradient: linear-gradient(180deg, #233d4d 0%, #000000 100%);
       --card-bg: #000000;
-      --glass-bg: rgba(255, 255, 255, 0.08);
-      --glass-border: rgba(255, 255, 255, 0.12);
-      --text-main: #ffffff;
-      --text-sub: rgba(255, 255, 255, 0.7);
-      --text-sub-dark: rgba(255, 255, 255, 0.45);
-      --primary: #e04b16;
-      --primary-hover: #ff5b24;
-      --success: #10b981;
-      --error: #ef4444;
+      --glass-bg: rgba(234, 236, 240, 0.08);
+      --glass-border: rgba(234, 236, 240, 0.12);
+      --text-main: #eaecf0;
+      --text-sub: rgba(234, 236, 240, 0.7);
+      --text-sub-dark: rgba(234, 236, 240, 0.45);
+      --primary: #fe7f2d;
+      --primary-hover: #eaecf0;
+      --success: #eaecf0;
+      --error: #fe7f2d;
     }
 
     body {
@@ -24,7 +28,7 @@
       padding: 0;
       width: 100vw;
       height: 100vh;
-      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: var(--bg-gradient);
       color: var(--text-main);
       display: flex;
@@ -35,10 +39,10 @@
 
     .options-container {
       width: 350px;
-      height: 480px;
+      min-height: 540px;
       background: var(--bg-gradient);
       border-radius: 32px;
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(234, 236, 240, 0.15);
       overflow: hidden;
       display: flex;
       flex-direction: column;
@@ -67,7 +71,8 @@
     .header h1 {
       margin: 0;
       font-size: 24px;
-      font-weight: 600;
+      font-family: "Boldonse", Inter, sans-serif;
+      font-weight: 400;
       letter-spacing: -0.5px;
     }
 
@@ -82,7 +87,7 @@
       width: 110px;
       height: 110px;
       border-radius: 50%;
-      border: 2px dashed rgba(255, 255, 255, 0.15);
+      border: 2px dashed rgba(234, 236, 240, 0.15);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -93,18 +98,18 @@
       width: 85px;
       height: 85px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #e04b16 0%, #aa1a0f 100%);
-      border: 3px solid rgba(255, 255, 255, 0.18);
+      background: #fe7f2d;
+      border: 3px solid rgba(234, 236, 240, 0.18);
       display: flex;
       justify-content: center;
       align-items: center;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25), inset 0 2px 6px rgba(255, 255, 255, 0.15);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25), inset 0 2px 6px rgba(234, 236, 240, 0.15);
     }
 
     .cog-solid svg {
       width: 44px;
       height: 44px;
-      fill: #ffffff;
+      fill: #000000;
       animation: spin 8s linear infinite;
     }
 
@@ -117,7 +122,7 @@
       background: var(--card-bg);
       border-radius: 30px 30px 0 0;
       padding: 24px 24px 20px 24px;
-      height: 250px;
+      min-height: 300px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -155,7 +160,7 @@
     input:focus {
       outline: none;
       border-color: var(--primary);
-      box-shadow: 0 0 0 2px rgba(224, 75, 22, 0.2);
+      box-shadow: 0 0 0 2px rgba(254, 127, 45, 0.2);
     }
 
     .btn-group {
@@ -180,13 +185,13 @@
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #e04b16 0%, #aa1a0f 100%);
-      color: white;
-      box-shadow: 0 4px 12px rgba(224, 75, 22, 0.25);
+      background: #fe7f2d;
+      color: #000000;
+      box-shadow: 0 4px 12px rgba(254, 127, 45, 0.25);
     }
 
     .btn-primary:hover {
-      box-shadow: 0 6px 16px rgba(224, 75, 22, 0.4);
+      box-shadow: 0 6px 16px rgba(254, 127, 45, 0.4);
     }
 
     .btn-primary:active {
@@ -200,7 +205,7 @@
     }
 
     .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.12);
+      background: rgba(234, 236, 240, 0.12);
     }
 
     .btn-secondary:active {
@@ -263,6 +268,11 @@
       <div class="input-group">
         <div class="input-label">Gateway Endpoint</div>
         <input type="url" id="backend-url" placeholder="http://127.0.0.1:3000" required>
+      </div>
+
+      <div class="input-group">
+        <div class="input-label">Gateway API Key</div>
+        <input type="password" id="gateway-api-key" placeholder="Required in production" autocomplete="off">
       </div>
 
       <div class="btn-group">

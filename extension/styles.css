@@ -1,5 +1,20 @@
 /* Scoped CSS for the Injected Alpha Enhance Button (Shadow DOM) */
 
+@font-face {
+  font-family: "Boldonse";
+  src: url("assets/fonts/Boldonse-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+:host {
+  --alpha-black: #000000;
+  --alpha-blue: #233d4d;
+  --alpha-orange: #fe7f2d;
+  --alpha-grey: #eaecf0;
+}
+
 .alpha-container {
   position: relative;
   z-index: 9999;
@@ -7,80 +22,289 @@
   pointer-events: auto;
   display: flex;
   align-items: center;
+  gap: 8px;
 }
 
-.alpha-btn {
+.alpha-container[data-state="expanded"] .alpha-launcher {
+  opacity: 0;
+  transform: scale(0.72);
+  pointer-events: none;
+}
+
+.alpha-launcher {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
-  border-radius: 9999px;
-  font-size: 11px;
-  font-weight: 500;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid rgba(234, 236, 240, 0.18);
+  border-radius: 50%;
+  background: var(--alpha-orange);
+  color: var(--alpha-black);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.24);
   cursor: pointer;
-  transition: all 0.15s ease;
+  overflow: hidden;
+  transition: width 0.28s ease, opacity 0.2s ease, transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), background 0.16s ease;
+  touch-action: none;
   user-select: none;
-  box-shadow: none;
 }
 
-/* Dark Theme Injected Style */
-.alpha-container.theme-dark .alpha-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.75);
+.alpha-launcher.dragging {
+  cursor: grabbing;
+  transform: scale(1.06);
+  transition: none;
 }
 
-.alpha-container.theme-dark .alpha-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.25);
-  color: #ffffff;
-  transform: translateY(-0.5px);
+.alpha-launcher:hover,
+.alpha-launcher.active {
+  background: var(--alpha-blue);
+  color: var(--alpha-grey);
+  transform: translateY(-1px);
 }
 
-.alpha-container.theme-dark .alpha-btn:active {
-  transform: translateY(0);
-  background: rgba(255, 255, 255, 0.06);
-}
-
-/* Light Theme Injected Style */
-.alpha-container.theme-light .alpha-btn {
-  background: rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  color: rgba(0, 0, 0, 0.65);
-}
-
-.alpha-container.theme-light .alpha-btn:hover {
-  background: rgba(0, 0, 0, 0.08);
-  border-color: rgba(0, 0, 0, 0.18);
-  color: rgba(0, 0, 0, 0.85);
-  transform: translateY(-0.5px);
-}
-
-.alpha-container.theme-light .alpha-btn:active {
-  transform: translateY(0);
-  background: rgba(0, 0, 0, 0.05);
-}
-
-/* Spin animation for loading state */
-.alpha-btn.loading {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.alpha-btn.loading .alpha-icon {
-  animation: alpha-spin 1.2s linear infinite;
-}
-
-@keyframes alpha-spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.alpha-icon {
-  width: 11px;
-  height: 11px;
+.alpha-launcher-icon {
+  width: 18px;
+  height: 18px;
   fill: currentColor;
-  display: inline-block;
+}
+
+.alpha-thinking-label {
+  white-space: nowrap;
+  font: 400 10px/1.2 "Boldonse", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.alpha-launcher.thinking {
+  width: 150px;
+  flex-basis: 150px;
+  padding: 0 14px;
+  gap: 9px;
+  border-radius: 20px;
+  cursor: wait;
+}
+
+.alpha-launcher.thinking .alpha-launcher-icon {
+  animation: alpha-pulse-spin 1.4s ease-in-out infinite;
+}
+
+@keyframes alpha-pulse-spin {
+  0% { transform: rotate(0deg) scale(0.9); opacity: 0.7; }
+  50% { transform: rotate(180deg) scale(1.08); opacity: 1; }
+  100% { transform: rotate(360deg) scale(0.9); opacity: 0.7; }
+}
+
+.alpha-panel {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: min(420px, calc(100vw - 40px));
+  padding: 16px;
+  border: 1px solid rgba(234, 236, 240, 0.22);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.98);
+  color: var(--alpha-grey);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.34);
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(10px, 12px) scale(0.08, 0.12);
+  transform-origin: bottom right;
+  transition:
+    opacity 0.18s ease,
+    transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    border-radius 0.36s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s linear 0.42s;
+  box-sizing: border-box;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.alpha-panel.viewport-fit {
+  position: fixed;
+  right: auto;
+  bottom: auto;
+  transform-origin: var(--alpha-origin-x, right) var(--alpha-origin-y, bottom);
+}
+
+.alpha-panel.panel-below {
+  top: 0;
+  bottom: auto;
+  transform-origin: top right;
+  transform: translate(10px, -12px) scale(0.08, 0.12);
+}
+
+.alpha-panel.detached {
+  position: fixed;
+  right: auto;
+  bottom: auto;
+  margin: 0;
+  transform-origin: center;
+}
+
+@media (max-width: 560px) {
+  .alpha-panel {
+    position: fixed;
+    right: 12px;
+    bottom: 72px;
+    width: calc(100vw - 24px);
+  }
+}
+
+.alpha-panel.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  border-radius: 18px;
+  transition-delay: 0s;
+}
+
+.alpha-panel.panel-below.show,
+.alpha-panel.detached.show {
+  transform: translateY(0) scale(1);
+}
+
+.alpha-result-view[hidden] {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alpha-launcher,
+  .alpha-panel,
+  .alpha-tooltip {
+    transition: none;
+  }
+
+  .alpha-launcher.thinking .alpha-launcher-icon {
+    animation: none;
+  }
+}
+
+.alpha-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+
+.alpha-panel-header:active {
+  cursor: grabbing;
+}
+
+.alpha-eyebrow {
+  color: var(--alpha-orange);
+  font-family: "Boldonse", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+}
+
+.alpha-panel-title {
+  margin-top: 3px;
+  font-family: "Boldonse", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.alpha-icon-btn {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  color: var(--alpha-grey);
+  background: rgba(234, 236, 240, 0.06);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.alpha-preview {
+  display: block;
+  width: 100%;
+  min-height: 190px;
+  max-height: min(44vh, 320px);
+  padding: 12px;
+  resize: vertical;
+  box-sizing: border-box;
+  border: 1px solid rgba(234, 236, 240, 0.18);
+  border-radius: 12px;
+  outline: none;
+  background: rgba(234, 236, 240, 0.045);
+  color: var(--alpha-grey);
+  font: 400 12px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+@media (max-height: 620px) {
+  .alpha-panel {
+    padding: 12px;
+  }
+
+  .alpha-preview {
+    min-height: 110px;
+    max-height: 30vh;
+  }
+
+  .alpha-meta {
+    margin-bottom: 10px;
+  }
+}
+
+.alpha-preview:focus {
+  border-color: var(--alpha-orange);
+  box-shadow: 0 0 0 3px rgba(254, 127, 45, 0.14);
+}
+
+.alpha-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 10px 2px 14px;
+  color: rgba(234, 236, 240, 0.7);
+  font-size: 10px;
+}
+
+.alpha-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.alpha-secondary-btn,
+.alpha-primary-btn {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.alpha-secondary-btn {
+  border: 1px solid rgba(234, 236, 240, 0.2);
+  background: transparent;
+  color: var(--alpha-grey);
+}
+
+.alpha-retry-btn {
+  border-color: rgba(254, 127, 45, 0.5);
+  color: var(--alpha-orange);
+}
+
+.alpha-retry-btn:hover {
+  background: rgba(254, 127, 45, 0.1);
+}
+
+.alpha-primary-btn {
+  border: 0;
+  background: var(--alpha-orange);
+  color: var(--alpha-black);
+  box-shadow: 0 6px 16px rgba(254, 127, 45, 0.24);
 }
 
 /* Centered Speech-Bubble Tooltip */
@@ -89,7 +313,7 @@
   bottom: calc(100% + 8px);
   left: 50%;
   transform: translate(-50%, 4px);
-  color: #ffffff;
+  color: var(--alpha-grey);
   padding: 6px 12px;
   border-radius: 8px;
   font-size: 11px;
@@ -122,19 +346,20 @@
 
 /* Success Speech Bubble */
 .alpha-tooltip.type-success {
-  background: rgba(15, 23, 42, 0.96);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(35, 61, 77, 0.98);
+  border: 1px solid rgba(234, 236, 240, 0.1);
 }
 .alpha-tooltip.type-success::after {
-  border-color: rgba(15, 23, 42, 0.96) transparent transparent transparent;
+  border-color: rgba(35, 61, 77, 0.98) transparent transparent transparent;
 }
 
 /* Error Speech Bubble */
 .alpha-tooltip.type-error {
-  background: rgba(220, 38, 38, 0.98);
-  border: 1px solid rgba(239, 68, 68, 0.35);
-  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.25);
+  background: var(--alpha-orange);
+  color: var(--alpha-black);
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  box-shadow: 0 6px 20px rgba(254, 127, 45, 0.25);
 }
 .alpha-tooltip.type-error::after {
-  border-color: rgba(220, 38, 38, 0.98) transparent transparent transparent;
+  border-color: var(--alpha-orange) transparent transparent transparent;
 }

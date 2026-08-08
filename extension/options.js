@@ -1,12 +1,14 @@
 document.addEventListener('DOMContentLoaded', () => {
   const urlInput = document.getElementById('backend-url');
+  const apiKeyInput = document.getElementById('gateway-api-key');
   const btnSave = document.getElementById('btn-save');
   const btnTest = document.getElementById('btn-test');
   const statusBox = document.getElementById('status-box');
 
   // Load existing settings
-  chrome.storage.local.get({ backendUrl: 'http://127.0.0.1:3000' }, (result) => {
+  chrome.storage.local.get({ backendUrl: 'http://127.0.0.1:3000', gatewayApiKey: '' }, (result) => {
     urlInput.value = result.backendUrl;
+    apiKeyInput.value = result.gatewayApiKey;
   });
 
   function showStatus(message, isError = false) {
@@ -17,42 +19,70 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 4000);
   }
 
+  function normalizeGatewayUrl(value) {
+    const parsed = new URL(value);
+    const isLocalhost = parsed.hostname === '127.0.0.1' || parsed.hostname === 'localhost';
+    if (parsed.protocol !== 'https:' && !(isLocalhost && parsed.protocol === 'http:')) {
+      throw new Error('Use HTTPS for production gateways. HTTP is allowed only for localhost.');
+    }
+    return parsed.origin;
+  }
+
+  async function ensureGatewayPermission(url) {
+    const originPattern = `${new URL(url).origin}/*`;
+    const hasPermission = await chrome.permissions.contains({ origins: [originPattern] });
+    if (hasPermission) return true;
+    return chrome.permissions.request({ origins: [originPattern] });
+  }
+
   // Save settings
-  btnSave.addEventListener('click', () => {
-    let url = urlInput.value.trim();
-    if (!url) {
+  btnSave.addEventListener('click', async () => {
+    if (!urlInput.value.trim()) {
       showStatus('URL cannot be empty.', true);
       return;
     }
 
-    // Strip trailing slash for consistency
-    if (url.endsWith('/')) {
-      url = url.slice(0, -1);
-    }
-
-    chrome.storage.local.set({ backendUrl: url }, () => {
+    try {
+      const url = normalizeGatewayUrl(urlInput.value.trim());
+      const granted = await ensureGatewayPermission(url);
+      if (!granted) {
+        showStatus('Gateway access was not granted.', true);
+        return;
+      }
+      await chrome.storage.local.set({
+        backendUrl: url,
+        gatewayApiKey: apiKeyInput.value.trim()
+      });
+      urlInput.value = url;
       showStatus('Settings saved successfully.');
-    });
+    } catch (err) {
+      showStatus(err.message || 'Enter a valid gateway URL.', true);
+    }
   });
 
   // Test connection
   btnTest.addEventListener('click', async () => {
-    let url = urlInput.value.trim();
-    if (!url) {
+    if (!urlInput.value.trim()) {
       showStatus('URL cannot be empty.', true);
       return;
-    }
-    
-    if (url.endsWith('/')) {
-      url = url.slice(0, -1);
     }
 
     showStatus('Testing connection...');
 
     try {
-      const response = await fetch(`${url}/api/health`, {
+      const url = normalizeGatewayUrl(urlInput.value.trim());
+      const granted = await ensureGatewayPermission(url);
+      if (!granted) {
+        showStatus('Gateway access was not granted.', true);
+        return;
+      }
+      const apiKey = apiKeyInput.value.trim();
+      const response = await fetch(`${url}/api/ready`, {
         method: 'GET',
-        headers: { 'Accept': 'application/json' },
+        headers: {
+          'Accept': 'application/json',
+          ...(apiKey ? { 'X-Alpha-Key': apiKey } : {})
+        },
       });
 
       if (!response.ok) {
@@ -60,13 +90,13 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const data = await response.json();
-      if (data && data.status === 'ok') {
+      if (data && data.status === 'ready') {
         showStatus('Connection successful! Backend is online.');
       } else {
         showStatus('Received invalid response from backend.', true);
       }
     } catch (err) {
-      showStatus(`Connection failed: Make sure backend is running at ${url}`, true);
+      showStatus(`Connection failed: ${err.message || 'gateway unavailable'}`, true);
     }
   });
 });

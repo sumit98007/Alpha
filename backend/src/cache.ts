@@ -5,6 +5,7 @@ import { getEmbedding } from './gemini.js';
 interface CacheEntry {
   embedding: number[];
   optimizedText: string;
+  createdAt: number;
 }
 
 const REDIS_CACHE_KEY = 'alpha:semantic_cache';
@@ -13,7 +14,9 @@ let redisClient: Redis | null = null;
 let useRedis = false;
 
 // Initialize Redis Client if configured
-if (config.redisUrl) {
+if (!config.enableSemanticCache) {
+  console.log('Semantic cache disabled.');
+} else if (config.redisUrl) {
   try {
     redisClient = new Redis(config.redisUrl, {
       maxRetriesPerRequest: 1,
@@ -63,6 +66,7 @@ function cosineSimilarity(a: number[], b: number[]): number {
 export async function checkSemanticCache(
   scrubbedText: string
 ): Promise<{ optimizedText: string; cached: boolean; embedding: number[] } | null> {
+  if (!config.enableSemanticCache) return null;
   try {
     // 1. Generate the embedding for the incoming text
     const queryEmbedding = await getEmbedding(scrubbedText);
@@ -74,6 +78,10 @@ export async function checkSemanticCache(
       entries = await redisClient.hgetall(REDIS_CACHE_KEY);
     } else {
       for (const [text, entry] of inMemoryCache.entries()) {
+        if (Date.now() - entry.createdAt > config.cacheTtlMs) {
+          inMemoryCache.delete(text);
+          continue;
+        }
         entries[text] = JSON.stringify(entry);
       }
     }
@@ -85,6 +93,7 @@ export async function checkSemanticCache(
     for (const [_, valueJson] of Object.entries(entries)) {
       try {
         const entry: CacheEntry = JSON.parse(valueJson);
+        if (entry.createdAt && Date.now() - entry.createdAt > config.cacheTtlMs) continue;
         const similarity = cosineSimilarity(queryEmbedding, entry.embedding);
 
         if (similarity > bestSimilarity) {
@@ -118,14 +127,19 @@ export async function saveToSemanticCache(
   optimizedText: string,
   precalculatedEmbedding?: number[]
 ): Promise<void> {
+  if (!config.enableSemanticCache) return;
   try {
     const embedding = precalculatedEmbedding || (await getEmbedding(scrubbedText));
-    const entry: CacheEntry = { embedding, optimizedText };
+    const entry: CacheEntry = { embedding, optimizedText, createdAt: Date.now() };
     const valueStr = JSON.stringify(entry);
 
     if (useRedis && redisClient) {
       await redisClient.hset(REDIS_CACHE_KEY, scrubbedText, valueStr);
     } else {
+      if (inMemoryCache.size >= config.cacheMaxEntries) {
+        const oldestKey = inMemoryCache.keys().next().value as string | undefined;
+        if (oldestKey) inMemoryCache.delete(oldestKey);
+      }
       inMemoryCache.set(scrubbedText, entry);
     }
     console.log('[Cache Save] Successfully saved prompt to semantic cache.');

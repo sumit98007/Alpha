@@ -2,11 +2,17 @@
   "name": "alpha-backend",
   "version": "1.0.0",
   "description": "Secure AI Prompt Optimization Gateway",
+  "engines": {
+    "node": ">=20"
+  },
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "test": "npm run build && node --test test/*.test.js && npm run test:environment",
+    "test:environment": "node test-environment.js",
+    "check": "npm run test"
   },
   "dependencies": {
     "@fastify/cors": "^10.0.1",

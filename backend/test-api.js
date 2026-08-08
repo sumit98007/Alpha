@@ -2,6 +2,9 @@
 // Assumes the server is running at http://127.0.0.1:3000
 
 const BACKEND_URL = 'http://127.0.0.1:3000';
+const GATEWAY_API_KEY = process.env.GATEWAY_API_KEY || '';
+const authHeaders = GATEWAY_API_KEY ? { 'X-Alpha-Key': GATEWAY_API_KEY } : {};
+const EXPECT_CACHE = process.env.ENABLE_SEMANTIC_CACHE === 'true';
 
 async function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -57,7 +60,7 @@ async function runTests() {
   try {
     const resp1 = await fetch(`${BACKEND_URL}/api/enhance`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders },
       body: JSON.stringify(payload1)
     });
     
@@ -79,12 +82,12 @@ async function runTests() {
   }
 
   // Test 3: Duplicate prompt (expecting exact Cache Hit)
-  console.log('[Test 3] Sending duplicate prompt (expecting exact cache HIT)...');
+  console.log(`[Test 3] Sending duplicate prompt (cache ${EXPECT_CACHE ? 'enabled' : 'disabled'})...`);
   const start2 = Date.now();
   try {
     const resp2 = await fetch(`${BACKEND_URL}/api/enhance`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders },
       body: JSON.stringify(payload1)
     });
     
@@ -92,11 +95,15 @@ async function runTests() {
     const elapsed2 = Date.now() - start2;
     
     if (resp2.ok) {
-      if (data2.cached === true) {
-        console.log(`  Pass: Duplicate prompt resolved in ${elapsed2}ms (Cache HIT).`);
-        console.log(`  Result matched: ${data2.optimizedText === optimizedText1 ? 'YES' : 'NO'}\n`);
+      if (data2.cached === EXPECT_CACHE) {
+        console.log(`  Pass: Duplicate prompt resolved in ${elapsed2}ms (cached=${data2.cached}).`);
+        if (EXPECT_CACHE) {
+          console.log(`  Result matched: ${data2.optimizedText === optimizedText1 ? 'YES' : 'NO'}\n`);
+        } else {
+          console.log('  Privacy mode confirmed: no cross-request result reuse.\n');
+        }
       } else {
-        console.error('  Fail: Expected cache HIT but got MISS.');
+        console.error(`  Fail: Expected cached=${EXPECT_CACHE} but received cached=${data2.cached}.`);
         process.exit(1);
       }
     } else {
@@ -114,7 +121,7 @@ async function runTests() {
   try {
     const resp3 = await fetch(`${BACKEND_URL}/api/enhance`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders },
       body: JSON.stringify(payload2)
     });
     
@@ -125,8 +132,10 @@ async function runTests() {
       if (data3.cached === true) {
         console.log(`  Pass: Semantically similar prompt resolved in ${elapsed3}ms (Semantic HIT).`);
         console.log(`  Result text: "${data3.optimizedText.slice(0, 100)}..."\n`);
+      } else if (!EXPECT_CACHE) {
+        console.log('  Pass: Semantic cache is disabled for privacy.');
       } else {
-        console.warn('  Note: Semantic cache missed. This is expected if similarity threshold was not crossed, or if Gemini key was missing/mocked.');
+        console.warn('  Note: Semantic cache missed because the similarity threshold was not crossed.');
       }
     } else {
       console.error('  Fail: Semantic check request failed', data3);
