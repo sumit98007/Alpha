@@ -1,0 +1,10 @@
+**/node_modules/
+**/dist/
+**/.next/
+**/.vinext/
+**/.wrangler/
+artifacts/
+website/public/
+extension/assets/icons/
+*.tsbuildinfo
+*.zip

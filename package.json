@@ -1,0 +1,31 @@
+{
+  "name": "alpha-release-tooling",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "audit:production": "npm audit --omit=dev --audit-level=high && npm audit --prefix backend --omit=dev --audit-level=high && npm audit --prefix website --omit=dev --audit-level=high",
+    "build": "npm --prefix backend run build",
+    "check": "npm run lint && npm run format:check && npm run test && npm run check:website && npm run audit:production && npm run package:check && npm run check:diff",
+    "check:diff": "git diff --check",
+    "check:website": "npm run lint --prefix website && npm run typecheck --prefix website && npm test --prefix website",
+    "evaluate:prompt": "node scripts/run-prompt-evaluation.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint \"extension/**/*.js\" \"backend/src/**/*.ts\" \"backend/**/*.js\" \"scripts/**/*.mjs\" \"quality-tests/*.mjs\"",
+    "icons:generate": "node scripts/generate-extension-icons.mjs",
+    "package:check": "node scripts/package-extension.mjs --api-origin=https://api.alpha.example --oauth-authorization-endpoint=https://login.alpha.example/oauth2/authorize --oauth-token-endpoint=https://tokens.alpha.example/oauth2/token --oauth-client-id=alpha-extension-client.example --oauth-scopes=\"openid alpha.api.example\" --output=artifacts/alpha-extension-ci.zip --verify-only",
+    "package:extension": "node scripts/package-extension.mjs",
+    "test": "npm run test:quality && npm --prefix backend test",
+    "test:quality": "node --test quality-tests/*.test.mjs",
+    "verify:extension": "node scripts/verify-extension-package.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.4",
+    "eslint": "9.39.4",
+    "prettier": "3.6.2",
+    "typescript-eslint": "8.66.0"
+  }
+}

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title description">
+  <title id="title">Alpha extension icon</title>
+  <description id="description">An orange circle and black four-point spark on a deep-blue rounded square.</description>
+  <rect x="2.56" y="2.56" width="122.88" height="122.88" rx="19.2" fill="#233D4D"/>
+  <circle cx="64" cy="64" r="42.24" fill="#FE7F2D"/>
+  <path fill="#000000" d="m64 35.84 6.72 21.44L92.16 64l-21.44 6.72L64 92.16l-6.72-21.44L35.84 64l21.44-6.72L64 35.84Z"/>
+</svg>

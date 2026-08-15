@@ -3,11 +3,16 @@
 
 const BACKEND_URL = 'http://127.0.0.1:3000';
 const GATEWAY_API_KEY = process.env.GATEWAY_API_KEY || '';
-const authHeaders = GATEWAY_API_KEY ? { 'X-Alpha-Key': GATEWAY_API_KEY } : {};
+const ACCESS_TOKEN = process.env.ALPHA_ACCESS_TOKEN || '';
+const authHeaders = ACCESS_TOKEN
+  ? { Authorization: `Bearer ${ACCESS_TOKEN}` }
+  : GATEWAY_API_KEY
+    ? { 'X-Alpha-Key': GATEWAY_API_KEY }
+    : {};
 const EXPECT_CACHE = process.env.ENABLE_SEMANTIC_CACHE === 'true';
 
 async function delay(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function runTests() {
@@ -30,25 +35,39 @@ async function runTests() {
   }
 
   // Define test payloads
+  const sessionId1 = '11111111-1111-4111-8111-111111111111';
+  const placeholder1 = '{{ALPHA_SECRET_11111111111141118111111111111111_PROMPT_0}}';
   const payload1 = {
-    sessionId: 'test-session-123',
-    meta: { hostPlatform: 'chatgpt', timestamp: Math.floor(Date.now() / 1000) },
+    sessionId: sessionId1,
+    meta: { hostPlatform: 'chatgpt' },
     payload: {
-      scrubbedText: 'Act as a Senior DevOps Engineer. Review this deployment pipeline script: {{ALPHA_SECRET_0}} and fix the optimization gaps.',
+      scrubbedText: `Act as a Senior DevOps Engineer. Review this deployment pipeline script: ${placeholder1} and fix the optimization gaps.`,
       redactionLog: [
-        { placeholder: '{{ALPHA_SECRET_0}}', type: 'AWS_API_KEY' }
+        {
+          placeholder: placeholder1,
+          source: 'PROMPT',
+          requestId: sessionId1,
+          occurrences: 1
+        }
       ]
     }
   };
 
   // Payload 2: Semantically similar to payload 1 (testing vector database cache)
+  const sessionId2 = '22222222-2222-4222-8222-222222222222';
+  const placeholder2 = '{{ALPHA_SECRET_22222222222242228222222222222222_PROMPT_0}}';
   const payload2 = {
-    sessionId: 'test-session-456',
-    meta: { hostPlatform: 'chatgpt', timestamp: Math.floor(Date.now() / 1000) },
+    sessionId: sessionId2,
+    meta: { hostPlatform: 'chatgpt' },
     payload: {
-      scrubbedText: 'Act as a Senior DevOps Engineer. Review this deployment pipeline script: {{ALPHA_SECRET_0}} and improve the optimization gaps.',
+      scrubbedText: `Act as a Senior DevOps Engineer. Review this deployment pipeline script: ${placeholder2} and improve the optimization gaps.`,
       redactionLog: [
-        { placeholder: '{{ALPHA_SECRET_0}}', type: 'AWS_API_KEY' }
+        {
+          placeholder: placeholder2,
+          source: 'PROMPT',
+          requestId: sessionId2,
+          occurrences: 1
+        }
       ]
     }
   };
@@ -63,10 +82,10 @@ async function runTests() {
       headers: { 'Content-Type': 'application/json', ...authHeaders },
       body: JSON.stringify(payload1)
     });
-    
+
     const data1 = await resp1.json();
     const elapsed1 = Date.now() - start1;
-    
+
     if (resp1.ok) {
       optimizedText1 = data1.optimizedText;
       console.log(`  Pass: Prompt enhanced in ${elapsed1}ms.`);
@@ -82,7 +101,9 @@ async function runTests() {
   }
 
   // Test 3: Duplicate prompt (expecting exact Cache Hit)
-  console.log(`[Test 3] Sending duplicate prompt (cache ${EXPECT_CACHE ? 'enabled' : 'disabled'})...`);
+  console.log(
+    `[Test 3] Sending duplicate prompt (cache ${EXPECT_CACHE ? 'enabled' : 'disabled'})...`
+  );
   const start2 = Date.now();
   try {
     const resp2 = await fetch(`${BACKEND_URL}/api/enhance`, {
@@ -90,20 +111,24 @@ async function runTests() {
       headers: { 'Content-Type': 'application/json', ...authHeaders },
       body: JSON.stringify(payload1)
     });
-    
+
     const data2 = await resp2.json();
     const elapsed2 = Date.now() - start2;
-    
+
     if (resp2.ok) {
       if (data2.cached === EXPECT_CACHE) {
         console.log(`  Pass: Duplicate prompt resolved in ${elapsed2}ms (cached=${data2.cached}).`);
         if (EXPECT_CACHE) {
-          console.log(`  Result matched: ${data2.optimizedText === optimizedText1 ? 'YES' : 'NO'}\n`);
+          console.log(
+            `  Result matched: ${data2.optimizedText === optimizedText1 ? 'YES' : 'NO'}\n`
+          );
         } else {
           console.log('  Privacy mode confirmed: no cross-request result reuse.\n');
         }
       } else {
-        console.error(`  Fail: Expected cached=${EXPECT_CACHE} but received cached=${data2.cached}.`);
+        console.error(
+          `  Fail: Expected cached=${EXPECT_CACHE} but received cached=${data2.cached}.`
+        );
         process.exit(1);
       }
     } else {
@@ -124,18 +149,22 @@ async function runTests() {
       headers: { 'Content-Type': 'application/json', ...authHeaders },
       body: JSON.stringify(payload2)
     });
-    
+
     const data3 = await resp3.json();
     const elapsed3 = Date.now() - start3;
-    
+
     if (resp3.ok) {
       if (data3.cached === true) {
-        console.log(`  Pass: Semantically similar prompt resolved in ${elapsed3}ms (Semantic HIT).`);
+        console.log(
+          `  Pass: Semantically similar prompt resolved in ${elapsed3}ms (Semantic HIT).`
+        );
         console.log(`  Result text: "${data3.optimizedText.slice(0, 100)}..."\n`);
       } else if (!EXPECT_CACHE) {
         console.log('  Pass: Semantic cache is disabled for privacy.');
       } else {
-        console.warn('  Note: Semantic cache missed because the similarity threshold was not crossed.');
+        console.warn(
+          '  Note: Semantic cache missed because the similarity threshold was not crossed.'
+        );
       }
     } else {
       console.error('  Fail: Semantic check request failed', data3);

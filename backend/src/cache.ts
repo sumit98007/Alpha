@@ -1,4 +1,5 @@
 import Redis from 'ioredis';
+import { createHash } from 'node:crypto';
 import { config } from './config.js';
 import { getEmbedding } from './gemini.js';
 
@@ -8,7 +9,36 @@ interface CacheEntry {
   createdAt: number;
 }
 
-const REDIS_CACHE_KEY = 'alpha:semantic_cache';
+export function classifyCacheEntries(
+  entries: Record<string, string>,
+  now: number,
+  ttlMs: number
+): { freshEntries: Array<[string, CacheEntry]>; staleFields: string[] } {
+  const freshEntries: Array<[string, CacheEntry]> = [];
+  const staleFields: string[] = [];
+  for (const [field, valueJson] of Object.entries(entries)) {
+    try {
+      const entry = JSON.parse(valueJson) as Partial<CacheEntry>;
+      const valid =
+        Number.isFinite(entry.createdAt) &&
+        (entry.createdAt as number) > 0 &&
+        (entry.createdAt as number) <= now &&
+        now - (entry.createdAt as number) <= ttlMs &&
+        typeof entry.optimizedText === 'string' &&
+        entry.optimizedText.length > 0 &&
+        entry.optimizedText.length <= config.maxEnhancedOutputCharacters &&
+        Array.isArray(entry.embedding) &&
+        entry.embedding.length === 768 &&
+        entry.embedding.every(Number.isFinite);
+      if (valid) freshEntries.push([field, entry as CacheEntry]);
+      else staleFields.push(field);
+    } catch {
+      staleFields.push(field);
+    }
+  }
+  return { freshEntries, staleFields };
+}
+
 const inMemoryCache = new Map<string, CacheEntry>();
 let redisClient: Redis | null = null;
 let useRedis = false;
@@ -20,7 +50,7 @@ if (!config.enableSemanticCache) {
   try {
     redisClient = new Redis(config.redisUrl, {
       maxRetriesPerRequest: 1,
-      connectTimeout: 2000,
+      connectTimeout: 2000
     });
 
     redisClient.on('connect', () => {
@@ -28,12 +58,12 @@ if (!config.enableSemanticCache) {
       useRedis = true;
     });
 
-    redisClient.on('error', (err) => {
-      console.warn(`Redis connection error: ${err.message}. Falling back to in-memory cache.`);
+    redisClient.on('error', () => {
+      console.warn('Semantic-cache Redis is unavailable. Falling back to in-memory cache.');
       useRedis = false;
     });
-  } catch (err: any) {
-    console.warn(`Failed to initialize Redis client: ${err.message}. Using in-memory cache.`);
+  } catch {
+    console.warn('Semantic-cache Redis could not be initialized. Using in-memory cache.');
   }
 } else {
   console.log('No Redis URL provided. Using in-memory semantic cache.');
@@ -44,17 +74,17 @@ if (!config.enableSemanticCache) {
  */
 function cosineSimilarity(a: number[], b: number[]): number {
   if (a.length !== b.length || a.length === 0) return 0;
-  
+
   let dotProduct = 0;
   let normA = 0;
   let normB = 0;
-  
+
   for (let i = 0; i < a.length; i++) {
     dotProduct += a[i] * b[i];
     normA += a[i] * a[i];
     normB += b[i] * b[i];
   }
-  
+
   if (normA === 0 || normB === 0) return 0;
   return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 }
@@ -64,25 +94,29 @@ function cosineSimilarity(a: number[], b: number[]): number {
  * Returns the optimized text if hit, or the generated embedding to reuse if miss.
  */
 export async function checkSemanticCache(
-  scrubbedText: string
+  scrubbedText: string,
+  namespace: string,
+  signal?: AbortSignal
 ): Promise<{ optimizedText: string; cached: boolean; embedding: number[] } | null> {
   if (!config.enableSemanticCache) return null;
   try {
     // 1. Generate the embedding for the incoming text
-    const queryEmbedding = await getEmbedding(scrubbedText);
+    const queryEmbedding = await getEmbedding(scrubbedText, signal);
 
     // 2. Fetch all entries from active database (Redis or In-memory)
     let entries: Record<string, string> = {};
 
     if (useRedis && redisClient) {
-      entries = await redisClient.hgetall(REDIS_CACHE_KEY);
+      entries = await redisClient.hgetall(redisCacheKey(namespace));
     } else {
       for (const [text, entry] of inMemoryCache.entries()) {
         if (Date.now() - entry.createdAt > config.cacheTtlMs) {
           inMemoryCache.delete(text);
           continue;
         }
-        entries[text] = JSON.stringify(entry);
+        if (text.startsWith(`${namespaceKey(namespace)}:`)) {
+          entries[text] = JSON.stringify(entry);
+        }
       }
     }
 
@@ -90,31 +124,32 @@ export async function checkSemanticCache(
     let bestMatchText: string | null = null;
     let bestSimilarity = -1;
 
-    for (const [_, valueJson] of Object.entries(entries)) {
-      try {
-        const entry: CacheEntry = JSON.parse(valueJson);
-        if (entry.createdAt && Date.now() - entry.createdAt > config.cacheTtlMs) continue;
-        const similarity = cosineSimilarity(queryEmbedding, entry.embedding);
-
-        if (similarity > bestSimilarity) {
-          bestSimilarity = similarity;
-          bestMatchText = entry.optimizedText;
-        }
-      } catch (e) {
-        // Skip malformed entries
+    const { freshEntries, staleFields } = classifyCacheEntries(
+      entries,
+      Date.now(),
+      config.cacheTtlMs
+    );
+    if (useRedis && redisClient && staleFields.length > 0) {
+      await redisClient.hdel(redisCacheKey(namespace), ...staleFields);
+    }
+    for (const [, entry] of freshEntries) {
+      const similarity = cosineSimilarity(queryEmbedding, entry.embedding);
+      if (similarity > bestSimilarity) {
+        bestSimilarity = similarity;
+        bestMatchText = entry.optimizedText;
       }
     }
 
     // Cosine similarity threshold selection
-    const threshold = 0.90;
+    const threshold = 0.9;
     if (bestMatchText && bestSimilarity >= threshold) {
       console.log(`[Cache Hit] Match found (Similarity: ${bestSimilarity.toFixed(4)})`);
       return { optimizedText: bestMatchText, cached: true, embedding: queryEmbedding };
     }
 
     return { optimizedText: '', cached: false, embedding: queryEmbedding };
-  } catch (err: any) {
-    console.error('Error during semantic cache lookup:', err.message);
+  } catch {
+    console.error('Semantic cache lookup failed; continuing without a cached result.');
     return null;
   }
 }
@@ -125,25 +160,66 @@ export async function checkSemanticCache(
 export async function saveToSemanticCache(
   scrubbedText: string,
   optimizedText: string,
-  precalculatedEmbedding?: number[]
+  namespace: string,
+  precalculatedEmbedding?: number[],
+  signal?: AbortSignal
 ): Promise<void> {
   if (!config.enableSemanticCache) return;
   try {
-    const embedding = precalculatedEmbedding || (await getEmbedding(scrubbedText));
+    const embedding = precalculatedEmbedding || (await getEmbedding(scrubbedText, signal));
     const entry: CacheEntry = { embedding, optimizedText, createdAt: Date.now() };
     const valueStr = JSON.stringify(entry);
 
     if (useRedis && redisClient) {
-      await redisClient.hset(REDIS_CACHE_KEY, scrubbedText, valueStr);
+      const cacheKey = redisCacheKey(namespace);
+      if ((await redisClient.hlen(cacheKey)) >= config.cacheMaxEntries) {
+        const [oldest] = await redisClient.hkeys(cacheKey);
+        if (oldest) await redisClient.hdel(cacheKey, oldest);
+      }
+      await redisClient.hset(cacheKey, contentKey(scrubbedText), valueStr);
+      await redisClient.pexpire(cacheKey, config.cacheTtlMs);
     } else {
       if (inMemoryCache.size >= config.cacheMaxEntries) {
-        const oldestKey = inMemoryCache.keys().next().value as string | undefined;
+        const oldestKey = inMemoryCache.keys().next().value;
         if (oldestKey) inMemoryCache.delete(oldestKey);
       }
-      inMemoryCache.set(scrubbedText, entry);
+      inMemoryCache.set(`${namespaceKey(namespace)}:${contentKey(scrubbedText)}`, entry);
     }
     console.log('[Cache Save] Successfully saved prompt to semantic cache.');
-  } catch (err: any) {
-    console.error('Failed to save to semantic cache:', err.message);
+  } catch {
+    console.error('Semantic cache save failed; continuing without caching.');
   }
+}
+
+function namespaceKey(namespace: string): string {
+  return createHash('sha256').update(namespace).digest('hex');
+}
+
+function contentKey(content: string): string {
+  return createHash('sha256').update(content).digest('hex');
+}
+
+function redisCacheKey(namespace: string): string {
+  return `alpha:semantic_cache:${namespaceKey(namespace)}`;
+}
+
+export async function isSemanticCacheReady(): Promise<boolean> {
+  if (!config.enableSemanticCache || !redisClient) return true;
+  try {
+    return (await redisClient.ping()) === 'PONG';
+  } catch {
+    return false;
+  }
+}
+
+export async function closeSemanticCache(): Promise<void> {
+  inMemoryCache.clear();
+  if (!redisClient) return;
+  if (redisClient.status === 'ready') {
+    await redisClient.quit();
+  } else {
+    redisClient.disconnect(false);
+  }
+  redisClient = null;
+  useRedis = false;
 }

@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Alpha Privacy Notice</title>
+    <style>
+      @font-face {
+        font-family: 'Boldonse';
+        src: url('assets/fonts/Boldonse-Regular.ttf') format('truetype');
+        font-display: swap;
+      }
+      :root {
+        color-scheme: light;
+        --black: #000000;
+        --blue: #233d4d;
+        --orange: #fe7f2d;
+        --grey: #eaecf0;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--grey);
+        color: var(--black);
+        font:
+          15px/1.65 -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+      }
+      main {
+        width: min(760px, calc(100% - 32px));
+        margin: 48px auto;
+        padding: 32px;
+        border: 1px solid rgba(35, 61, 77, 0.2);
+        border-radius: 22px;
+        background: var(--grey);
+        box-shadow: 0 18px 50px rgba(35, 61, 77, 0.12);
+      }
+      .eyebrow {
+        color: var(--blue);
+        font:
+          400 11px/1.3 'Boldonse',
+          sans-serif;
+        letter-spacing: 0.12em;
+      }
+      h1,
+      h2 {
+        font-family: 'Boldonse', sans-serif;
+        font-weight: 400;
+      }
+      h1 {
+        margin: 8px 0 14px;
+        font-size: clamp(26px, 5vw, 42px);
+        line-height: 1.25;
+      }
+      h2 {
+        margin: 28px 0 8px;
+        color: var(--blue);
+        font-size: 17px;
+      }
+      p,
+      li {
+        color: var(--blue);
+      }
+      .notice {
+        padding: 14px 16px;
+        border-left: 4px solid var(--orange);
+        border-radius: 0 10px 10px 0;
+        background: rgba(254, 127, 45, 0.1);
+      }
+      li + li {
+        margin-top: 7px;
+      }
+      a {
+        color: var(--black);
+        font-weight: 700;
+        text-decoration-color: var(--orange);
+        text-underline-offset: 3px;
+      }
+      code {
+        padding: 2px 5px;
+        border-radius: 4px;
+        background: rgba(35, 61, 77, 0.08);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="eyebrow">ALPHA PRIVACY NOTICE</div>
+      <h1>Know what leaves your device.</h1>
+      <p class="notice">
+        <strong>On first use, Alpha asks before it reads or transmits composer text.</strong>
+        Recent-chat sharing requires its own confirmation before Alpha reads recent visible
+        messages. After you save those choices, each later bubble click is the explicit action that
+        reads and sends that request until you reset your privacy choices.
+      </p>
+
+      <h2>What Alpha processes</h2>
+      <ul>
+        <li>The prompt you choose to refine.</li>
+        <li>
+          Up to 8 recent visible chat messages, capped at 12,000 characters, only when “Use current
+          chat” is enabled and separately allowed.
+        </li>
+        <li>Your optional prompt preferences and custom guidance.</li>
+        <li>The supported host-platform identifier: ChatGPT, Claude, or Gemini.</li>
+      </ul>
+
+      <h2>Where processing happens</h2>
+      <p>
+        Alpha applies selected sensitive-value detection and redaction locally when protection is
+        enabled. The resulting text—which can still contain sensitive data when protection is off or
+        detection misses a value—is sent over HTTPS to Alpha’s gateway and then to Google Gemini for
+        the sole purpose of producing a refined prompt. The gateway also receives placeholder
+        metadata needed to enforce integrity: whether a placeholder came from the prompt, recent
+        chat, or guidance, a request identifier, and the number of occurrences. When local
+        protection is enabled and detection succeeds, this metadata never contains the
+        detected-value category, detected value, or Alpha’s local placeholder-to-value map; those
+        remain on this device.
+      </p>
+      <p>
+        That local protection applies only to Alpha’s refinement path. The AI website owns and
+        controls its composer and page, so it may already observe or process text you type there
+        under its own terms, including before you submit it.
+      </p>
+
+      <h2>Limits of local protection</h2>
+      <p>
+        Alpha recognises specific patterns such as supported API keys, credentialed database URLs,
+        validated payment-card numbers, and selected government identifiers. Automated detection is
+        not complete and may miss names, addresses, private business information, source code,
+        passwords, or an unfamiliar secret format. Review content before refining it.
+      </p>
+
+      <h2>Restored values and the target AI service</h2>
+      <p>
+        Prompt-owned protected values are restored locally only after strict placeholder-integrity
+        checks pass; otherwise Alpha falls back to the unchanged original prompt. When you choose
+        “Use prompt,” the result is inserted into the current AI service’s composer. The host
+        service controls that composer and may observe or process the result, including restored
+        values, before submission under its own privacy terms. Alpha’s local protection does not
+        hide drafts or inserted results from the host page. Values detected only in recent chat or
+        guidance are never restored into the refined prompt.
+      </p>
+      <p>
+        When you choose “Copy,” Alpha writes the complete result—including any restored prompt-owned
+        values—to the system clipboard. Other applications, operating-system features, or clipboard
+        managers may be able to access clipboard contents.
+      </p>
+
+      <h2>Storage and retention</h2>
+      <p>
+        After a successful refinement, the base prompt and matching refined result remain only in
+        the current tab’s extension-owned frame memory so the bubble can reopen the result and “Try
+        again” can use the same base. The matching cache key is a SHA-256 fingerprint; it does not
+        contain raw prompt or recent-chat text. The base and result are not written to persistent
+        Chrome storage. A failed or cancelled refinement clears the retry base, and reloading or
+        closing the tab clears all of this page memory. Alpha stores preferences, consent records,
+        the bubble position, aggregate protection/refinement counters, and custom guidance in
+        Chrome’s local extension storage until you overwrite them, choose “Clear saved data,” or
+        remove the extension. Custom guidance is not redacted at rest, so do not save secrets there.
+        Clearing saved data does not sign you out; use Sign out separately to remove the in-memory
+        session token. Alpha’s API is designed not to persist prompt or recent-chat content;
+        security and reliability metadata must not include that content.
+      </p>
+
+      <h2>Abuse, rate, and quota controls</h2>
+      <p>
+        Alpha’s gateway processes the connection source IP and the authenticated JWT subject to
+        enforce abuse controls, request rates, and account quotas. Production disables default
+        raw-IP request logging. Redis limiter keys use secret-keyed HMAC identifiers rather than raw
+        IP addresses or subjects, and retain counters only for their fixed window: 60 seconds for
+        rate limits and up to 24 hours for the daily quota. Prompts, recent chat, access tokens, and
+        raw identifiers are not written to application logs or limiter keys.
+      </p>
+
+      <h2>Sign-in session</h2>
+      <p>
+        Alpha signs in through your configured identity provider using Authorization Code with PKCE.
+        The extension has no client secret, never accepts tokens in a redirect URL, requests no
+        refresh token, and keeps the short-lived access token only in Chrome’s in-memory session
+        storage for no more than one hour. Signing out or closing the browser session removes the
+        local copy; provider-side validity of an already issued token ends at expiry, within one
+        hour.
+      </p>
+
+      <h2>Chrome Web Store Limited Use</h2>
+      <p>
+        Alpha’s use of information received from Google APIs adheres to the
+        <a
+          href="https://developer.chrome.com/docs/webstore/program-policies/limited-use"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Chrome Web Store User Data Policy</a
+        >, including the Limited Use requirements. Prompt and optional recent-chat data are used
+        only to provide Alpha’s disclosed prompt-refinement purpose. Alpha does not sell user data
+        or use it for advertising, lending, or credit-worthiness. Humans do not routinely read
+        prompt or chat data; access is allowed only with specific consent, for security or abuse
+        investigation, or where legally required.
+      </p>
+
+      <h2>Your controls</h2>
+      <p>
+        Turn Alpha off, disable recent-chat context, reset privacy choices, or clear persistent
+        local extension data from the Alpha menu. Resetting choices makes Alpha ask again before
+        reading or transmitting another prompt. Turning sensitive-value protection off also resets
+        the sharing choices so the changed protection state is disclosed before another refinement.
+      </p>
+    </main>
+  </body>
+</html>

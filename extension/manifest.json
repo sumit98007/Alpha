@@ -1,61 +1,49 @@
 {
   "manifest_version": 3,
   "name": "Alpha - Secure Prompt Optimizer",
-  "version": "1.1.0",
-  "description": "Turns rough ideas into professional, token-aware prompts while protecting sensitive values locally.",
-  "permissions": [
-    "storage"
-  ],
-  "host_permissions": [
-    "http://127.0.0.1/*",
-    "http://localhost/*",
-    "https://chatgpt.com/*",
-    "https://*.chatgpt.com/*",
-    "https://claude.ai/*",
-    "https://*.claude.ai/*",
-    "https://gemini.google.com/*",
-    "https://*.gemini.google.com/*"
-  ],
-  "optional_host_permissions": [
-    "https://*/*",
-    "http://*/*"
-  ],
+  "version": "1.2.0",
+  "minimum_chrome_version": "114",
+  "description": "Turns rough ideas into professional prompts while redacting recognised sensitive-value patterns locally.",
+  "icons": {
+    "16": "assets/icons/icon-16.png",
+    "32": "assets/icons/icon-32.png",
+    "48": "assets/icons/icon-48.png",
+    "128": "assets/icons/icon-128.png"
+  },
+  "permissions": ["identity", "storage"],
+  "host_permissions": ["https://api.alpha.invalid/*", "https://auth.alpha.invalid/*"],
   "background": {
     "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": [
-        "https://chatgpt.com/*",
-        "https://*.chatgpt.com/*",
-        "https://claude.ai/*",
-        "https://*.claude.ai/*",
-        "https://gemini.google.com/*",
-        "https://*.gemini.google.com/*"
+      "matches": ["https://chatgpt.com/*", "https://claude.ai/*", "https://gemini.google.com/*"],
+      "js": [
+        "modules/runtime.js",
+        "modules/platform-adapters.js",
+        "modules/frame-protocol.js",
+        "modules/content-observer.js",
+        "modules/floating-ui.js",
+        "content.js"
       ],
-      "js": ["content.js"],
       "run_at": "document_end"
     }
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Alpha Prompt Optimizer"
+    "default_title": "Alpha Prompt Optimizer",
+    "default_icon": {
+      "16": "assets/icons/icon-16.png",
+      "32": "assets/icons/icon-32.png"
+    }
   },
-  "options_ui": {
-    "page": "options.html",
-    "open_in_tab": true
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'"
   },
   "web_accessible_resources": [
     {
-      "resources": ["styles.css", "assets/fonts/Boldonse-Regular.ttf"],
-      "matches": [
-        "https://chatgpt.com/*",
-        "https://*.chatgpt.com/*",
-        "https://claude.ai/*",
-        "https://*.claude.ai/*",
-        "https://gemini.google.com/*",
-        "https://*.gemini.google.com/*"
-      ]
+      "resources": ["floating-frame.html"],
+      "matches": ["https://chatgpt.com/*", "https://claude.ai/*", "https://gemini.google.com/*"]
     }
   ]
 }

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Secure AI Prompt Optimization Gateway",
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   },
   "main": "dist/server.js",
   "scripts": {
@@ -22,7 +22,7 @@
     "ioredis": "^5.4.1"
   },
   "devDependencies": {
-    "@types/node": "^20.11.24",
+    "@types/node": "^24.13.3",
     "tsx": "^4.7.1",
     "typescript": "^5.3.3"
   }

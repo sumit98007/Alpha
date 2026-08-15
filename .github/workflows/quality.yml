@@ -1,0 +1,58 @@
+name: Quality gate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Build, test, lint, audit, package
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      ALPHA_API_ORIGIN: https://api.alpha.example
+      ALPHA_OAUTH_AUTHORIZATION_ENDPOINT: https://login.alpha.example/oauth2/authorize
+      ALPHA_OAUTH_TOKEN_ENDPOINT: https://tokens.alpha.example/oauth2/token
+      ALPHA_OAUTH_CLIENT_ID: alpha-extension-client.example
+      ALPHA_OAUTH_SCOPES: openid alpha.api.example
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
+            website/package-lock.json
+
+      - name: Install release tooling
+        run: npm ci
+
+      - name: Install backend dependencies
+        run: npm ci --prefix backend
+
+      - name: Install website dependencies
+        if: ${{ hashFiles('website/package-lock.json') != '' }}
+        run: npm ci --prefix website
+
+      - name: Run complete repository quality gate
+        run: npm run check
+
+      - name: Independently verify embedded release configuration
+        run: npm run verify:extension -- artifacts/alpha-extension-ci.zip --verify-only
+
+      - name: Confirm clean generated-package contents
+        run: unzip -l artifacts/alpha-extension-ci.zip

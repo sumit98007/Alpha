@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>Alpha prompt refinement</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="alpha-container" id="alpha-container" data-state="collapsed">
+      <button
+        class="alpha-launcher"
+        id="alpha-launcher"
+        type="button"
+        aria-label="Improve prompt"
+        title="Improve prompt"
+        aria-expanded="false"
+        aria-controls="alpha-panel"
+      >
+        <svg class="alpha-launcher-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M12 2c0 5.523 4.477 10 10 10-5.523 0-10 4.477-10 10 0-5.523-4.477-10-10-10 5.523 0 10-4.477 10-10z"
+          />
+        </svg>
+        <span class="alpha-launcher-label" id="alpha-launcher-label" hidden></span>
+      </button>
+
+      <section
+        class="alpha-panel"
+        id="alpha-panel"
+        role="dialog"
+        aria-label="Alpha prompt refinement"
+        aria-hidden="true"
+      >
+        <div class="alpha-toast" id="alpha-toast" role="status" aria-live="polite" hidden></div>
+        <div class="alpha-consent-view" id="alpha-consent-view" hidden>
+          <div class="alpha-panel-header" data-alpha-drag-handle title="Drag to move">
+            <div>
+              <div class="alpha-eyebrow">YOUR DATA, YOUR CHOICE</div>
+              <div class="alpha-panel-title" id="alpha-consent-title">
+                Before Alpha refines your prompt
+              </div>
+            </div>
+            <button
+              class="alpha-icon-btn"
+              data-alpha-close
+              type="button"
+              aria-label="Close privacy notice"
+            >
+              −
+            </button>
+          </div>
+          <p class="alpha-consent-copy">
+            Alpha sends the prompt you choose, your saved refinement preferences and optional custom
+            guidance, the supported AI site identifier, and recent visible chat only when you enable
+            it, through Alpha’s gateway to Google Gemini solely to create a refined prompt. Alpha
+            also sends placeholder-integrity metadata: its prompt, chat, or guidance source, a
+            request ID, and occurrence count. When local protection is enabled and detection
+            succeeds, detected categories, detected values, and the local restoration map stay on
+            this device. Recognised sensitive-value patterns are redacted locally when protection is
+            enabled, but automated detection can miss sensitive data. This protection applies only
+            to Alpha’s refinement path; the host AI page controls its own composer and may already
+            observe or process drafts you type.
+          </p>
+          <label class="alpha-consent-option" id="alpha-prompt-consent-row">
+            <input type="checkbox" id="alpha-prompt-consent" />
+            <span
+              ><strong>Allow prompt processing</strong
+              ><small
+                >Until reset, each bubble click lets Alpha read and send the active prompt after
+                your selected local protection.</small
+              ></span
+            >
+          </label>
+          <label class="alpha-consent-option" id="alpha-context-consent-row" hidden>
+            <input type="checkbox" id="alpha-context-consent" />
+            <span
+              ><strong>Also allow recent-chat processing</strong
+              ><small
+                >Until reset while enabled, each bubble click lets Alpha read and include up to 8
+                recent visible messages (maximum 12,000 characters).</small
+              ></span
+            >
+          </label>
+          <p class="alpha-consent-note">
+            Alpha has not read or transmitted the selected prompt text or chat. It will do so only
+            after you continue. The host AI page remains separate and controls its composer.
+          </p>
+          <div class="alpha-consent-links">
+            <a
+              class="alpha-text-btn"
+              id="alpha-privacy-details"
+              href="privacy.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Privacy details</a
+            >
+          </div>
+          <div class="alpha-actions">
+            <button class="alpha-secondary-btn" id="alpha-consent-decline" type="button">
+              Not now
+            </button>
+            <button class="alpha-primary-btn" id="alpha-consent-accept" type="button" disabled>
+              Continue
+            </button>
+          </div>
+        </div>
+
+        <div class="alpha-result-view" id="alpha-result-view" hidden>
+          <div class="alpha-panel-header" data-alpha-drag-handle title="Drag to move">
+            <div>
+              <div class="alpha-eyebrow">ALPHA REFINED</div>
+              <div class="alpha-panel-title">Review your professional prompt</div>
+            </div>
+            <button
+              class="alpha-icon-btn"
+              data-alpha-close
+              type="button"
+              aria-label="Collapse preview"
+            >
+              −
+            </button>
+          </div>
+          <textarea
+            class="alpha-preview"
+            id="alpha-preview"
+            maxlength="30000"
+            spellcheck="true"
+            aria-label="Refined prompt"
+          ></textarea>
+          <div class="alpha-meta">
+            <span id="alpha-token-summary">Token estimate unavailable</span>
+            <span id="alpha-protection-summary">Protected locally</span>
+          </div>
+          <p class="alpha-use-disclosure" id="alpha-use-disclosure" hidden></p>
+          <div class="alpha-actions">
+            <button class="alpha-secondary-btn" id="alpha-copy" type="button">Copy</button>
+            <button class="alpha-secondary-btn alpha-retry-btn" id="alpha-retry" type="button">
+              Try again
+            </button>
+            <button class="alpha-primary-btn" id="alpha-use" type="button">Use prompt</button>
+          </div>
+        </div>
+      </section>
+
+      <p class="alpha-sr-only" id="alpha-status" role="status" aria-live="polite"></p>
+    </main>
+    <script src="modules/frame-protocol.js"></script>
+    <script src="floating-frame.js"></script>
+  </body>
+</html>

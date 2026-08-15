@@ -1,182 +1,209 @@
-/* Scoped CSS for the Injected Alpha Enhance Button (Shadow DOM) */
-
 @font-face {
-  font-family: "Boldonse";
-  src: url("assets/fonts/Boldonse-Regular.ttf") format("truetype");
+  font-family: 'Boldonse';
+  src: url('assets/fonts/Boldonse-Regular.ttf') format('truetype');
   font-style: normal;
   font-weight: 400;
   font-display: swap;
 }
 
-:host {
+:root {
   --alpha-black: #000000;
   --alpha-blue: #233d4d;
   --alpha-orange: #fe7f2d;
   --alpha-grey: #eaecf0;
+  color-scheme: dark;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+button,
+textarea,
+input {
+  font: inherit;
 }
 
 .alpha-container {
-  position: relative;
-  z-index: 9999;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  pointer-events: auto;
+  position: fixed;
+  inset: 0;
   display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.alpha-container[data-state="expanded"] .alpha-launcher {
-  opacity: 0;
-  transform: scale(0.72);
-  pointer-events: none;
+  align-items: flex-end;
+  justify-content: flex-end;
+  color: var(--alpha-grey);
 }
 
 .alpha-launcher {
   width: 40px;
   height: 40px;
-  flex: 0 0 40px;
+  min-width: 0;
+  min-height: 0;
   display: inline-flex;
+  flex-direction: row-reverse;
   align-items: center;
   justify-content: center;
+  gap: 9px;
   padding: 0;
-  border: 1px solid rgba(234, 236, 240, 0.18);
-  border-radius: 50%;
+  border: 1px solid rgba(234, 236, 240, 0.24);
+  border-radius: 999px;
   background: var(--alpha-orange);
   color: var(--alpha-black);
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.24);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
   cursor: pointer;
   overflow: hidden;
-  transition: width 0.28s ease, opacity 0.2s ease, transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), background 0.16s ease;
   touch-action: none;
   user-select: none;
+  transition:
+    width 0.28s ease,
+    opacity 0.2s ease,
+    transform 0.36s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.16s ease;
+}
+
+.alpha-launcher:hover,
+.alpha-launcher:focus-visible {
+  background: var(--alpha-blue);
+  color: var(--alpha-grey);
+}
+
+.alpha-launcher.notice-error {
+  background: var(--alpha-blue);
+  color: var(--alpha-grey);
+}
+
+.alpha-launcher:focus-visible,
+.alpha-icon-btn:focus-visible,
+.alpha-text-btn:focus-visible,
+.alpha-secondary-btn:focus-visible,
+.alpha-primary-btn:focus-visible,
+.alpha-preview:focus-visible,
+.alpha-consent-option:focus-within {
+  outline: 2px solid var(--alpha-orange);
+  outline-offset: 2px;
 }
 
 .alpha-launcher.dragging {
   cursor: grabbing;
-  transform: scale(1.06);
+  transform: scale(1.04);
   transition: none;
-}
-
-.alpha-launcher:hover,
-.alpha-launcher.active {
-  background: var(--alpha-blue);
-  color: var(--alpha-grey);
-  transform: translateY(-1px);
 }
 
 .alpha-launcher-icon {
   width: 18px;
   height: 18px;
+  flex: 0 0 18px;
   fill: currentColor;
 }
 
-.alpha-thinking-label {
+.alpha-launcher-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
-  font: 400 10px/1.2 "Boldonse", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font:
+    400 10px/1.2 'Boldonse',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
 }
 
-.alpha-launcher.thinking {
-  width: 150px;
-  flex-basis: 150px;
-  padding: 0 14px;
-  gap: 9px;
-  border-radius: 20px;
-  cursor: wait;
+.alpha-container[data-state='thinking'] .alpha-launcher,
+.alpha-container[data-state='notice'] .alpha-launcher {
+  width: 100%;
+  padding: 0 13px;
+  justify-content: flex-start;
 }
 
-.alpha-launcher.thinking .alpha-launcher-icon {
+.alpha-container[data-state='thinking'] .alpha-launcher-icon {
   animation: alpha-pulse-spin 1.4s ease-in-out infinite;
 }
 
+.alpha-container[data-state='expanded'] .alpha-launcher {
+  opacity: 0;
+  transform: scale(0.72);
+  pointer-events: none;
+}
+
 @keyframes alpha-pulse-spin {
-  0% { transform: rotate(0deg) scale(0.9); opacity: 0.7; }
-  50% { transform: rotate(180deg) scale(1.08); opacity: 1; }
-  100% { transform: rotate(360deg) scale(0.9); opacity: 0.7; }
+  0% {
+    transform: rotate(0deg) scale(0.9);
+    opacity: 0.7;
+  }
+  50% {
+    transform: rotate(180deg) scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(360deg) scale(0.9);
+    opacity: 0.7;
+  }
 }
 
 .alpha-panel {
   position: absolute;
-  right: 0;
-  bottom: 0;
-  width: min(420px, calc(100vw - 40px));
+  inset: 0;
+  width: 100%;
+  height: 100%;
   padding: 16px;
-  border: 1px solid rgba(234, 236, 240, 0.22);
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid rgba(234, 236, 240, 0.24);
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.98);
+  background: rgba(0, 0, 0, 0.985);
   color: var(--alpha-grey);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.34);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.36);
   opacity: 0;
   visibility: hidden;
-  transform: translate(10px, 12px) scale(0.08, 0.12);
+  transform: translate(10px, 12px) scale(0.08, 0.08);
   transform-origin: bottom right;
   transition:
     opacity 0.18s ease,
-    transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
-    border-radius 0.36s cubic-bezier(0.22, 1, 0.36, 1),
-    visibility 0s linear 0.42s;
-  box-sizing: border-box;
-  overflow: auto;
-  overscroll-behavior: contain;
-}
-
-.alpha-panel.viewport-fit {
-  position: fixed;
-  right: auto;
-  bottom: auto;
-  transform-origin: var(--alpha-origin-x, right) var(--alpha-origin-y, bottom);
-}
-
-.alpha-panel.panel-below {
-  top: 0;
-  bottom: auto;
-  transform-origin: top right;
-  transform: translate(10px, -12px) scale(0.08, 0.12);
-}
-
-.alpha-panel.detached {
-  position: fixed;
-  right: auto;
-  bottom: auto;
-  margin: 0;
-  transform-origin: center;
-}
-
-@media (max-width: 560px) {
-  .alpha-panel {
-    position: fixed;
-    right: 12px;
-    bottom: 72px;
-    width: calc(100vw - 24px);
-  }
+    transform 0.44s cubic-bezier(0.22, 1, 0.36, 1),
+    border-radius 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s linear 0.44s;
 }
 
 .alpha-panel.show {
   opacity: 1;
   visibility: visible;
-  transform: translateY(0) scale(1);
+  transform: translate(0, 0) scale(1);
   border-radius: 18px;
   transition-delay: 0s;
 }
 
-.alpha-panel.panel-below.show,
-.alpha-panel.detached.show {
-  transform: translateY(0) scale(1);
+.alpha-toast {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: -4px 34px 10px 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(254, 127, 45, 0.42);
+  border-radius: 9px;
+  background: var(--alpha-blue);
+  color: var(--alpha-grey);
+  font-size: 10px;
+  line-height: 1.4;
 }
 
-.alpha-result-view[hidden] {
+.alpha-toast[hidden] {
   display: none;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .alpha-launcher,
-  .alpha-panel,
-  .alpha-tooltip {
-    transition: none;
-  }
-
-  .alpha-launcher.thinking .alpha-launcher-icon {
-    animation: none;
-  }
+.alpha-result-view[hidden],
+.alpha-consent-view[hidden],
+.alpha-use-disclosure[hidden] {
+  display: none;
 }
 
 .alpha-panel-header {
@@ -186,8 +213,8 @@
   gap: 12px;
   margin-bottom: 12px;
   cursor: grab;
-  user-select: none;
   touch-action: none;
+  user-select: none;
 }
 
 .alpha-panel-header:active {
@@ -196,29 +223,35 @@
 
 .alpha-eyebrow {
   color: var(--alpha-orange);
-  font-family: "Boldonse", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: 9px;
-  font-weight: 400;
+  font:
+    400 9px/1.3 'Boldonse',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
   letter-spacing: 0.14em;
 }
 
 .alpha-panel-title {
   margin-top: 3px;
-  font-family: "Boldonse", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: 13px;
-  font-weight: 400;
-  line-height: 1.35;
+  font:
+    400 13px/1.35 'Boldonse',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
   letter-spacing: -0.01em;
 }
 
 .alpha-icon-btn {
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
   padding: 0;
   border: 0;
   border-radius: 8px;
+  background: rgba(234, 236, 240, 0.08);
   color: var(--alpha-grey);
-  background: rgba(234, 236, 240, 0.06);
   font-size: 18px;
   line-height: 1;
   cursor: pointer;
@@ -227,32 +260,20 @@
 .alpha-preview {
   display: block;
   width: 100%;
-  min-height: 190px;
+  min-height: 188px;
   max-height: min(44vh, 320px);
   padding: 12px;
   resize: vertical;
-  box-sizing: border-box;
-  border: 1px solid rgba(234, 236, 240, 0.18);
+  border: 1px solid rgba(234, 236, 240, 0.2);
   border-radius: 12px;
   outline: none;
-  background: rgba(234, 236, 240, 0.045);
+  background: rgba(234, 236, 240, 0.055);
   color: var(--alpha-grey);
-  font: 400 12px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
-
-@media (max-height: 620px) {
-  .alpha-panel {
-    padding: 12px;
-  }
-
-  .alpha-preview {
-    min-height: 110px;
-    max-height: 30vh;
-  }
-
-  .alpha-meta {
-    margin-bottom: 10px;
-  }
+  font:
+    400 12px/1.55 -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
 }
 
 .alpha-preview:focus {
@@ -260,12 +281,92 @@
   box-shadow: 0 0 0 3px rgba(254, 127, 45, 0.14);
 }
 
+.alpha-consent-copy,
+.alpha-consent-note,
+.alpha-use-disclosure {
+  margin: 0 0 12px;
+  color: rgba(234, 236, 240, 0.78);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.alpha-consent-note {
+  margin-top: 10px;
+  color: rgba(234, 236, 240, 0.62);
+  font-size: 10px;
+}
+
+.alpha-consent-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 9px;
+  padding: 10px;
+  border: 1px solid rgba(234, 236, 240, 0.18);
+  border-radius: 12px;
+  background: rgba(234, 236, 240, 0.055);
+  cursor: pointer;
+}
+
+.alpha-consent-option[hidden] {
+  display: none;
+}
+
+.alpha-consent-option input {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  margin: 1px 0 0;
+  accent-color: var(--alpha-orange);
+}
+
+.alpha-consent-option strong,
+.alpha-consent-option small {
+  display: block;
+}
+
+.alpha-consent-option strong {
+  color: var(--alpha-grey);
+  font-size: 11px;
+}
+
+.alpha-consent-option small {
+  margin-top: 3px;
+  color: rgba(234, 236, 240, 0.66);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.alpha-consent-links {
+  margin: -4px 0 12px;
+}
+
+.alpha-text-btn {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--alpha-orange);
+  font-size: 10px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.alpha-use-disclosure {
+  padding: 9px 10px;
+  border-left: 3px solid var(--alpha-orange);
+  border-radius: 0 8px 8px 0;
+  background: rgba(254, 127, 45, 0.1);
+  color: rgba(234, 236, 240, 0.9);
+  font-size: 10px;
+}
+
 .alpha-meta {
   display: flex;
   justify-content: space-between;
   gap: 12px;
   margin: 10px 2px 14px;
-  color: rgba(234, 236, 240, 0.7);
+  color: rgba(234, 236, 240, 0.72);
   font-size: 10px;
 }
 
@@ -277,7 +378,7 @@
 
 .alpha-secondary-btn,
 .alpha-primary-btn {
-  height: 34px;
+  min-height: 36px;
   padding: 0 14px;
   border-radius: 10px;
   font-size: 11px;
@@ -285,81 +386,73 @@
   cursor: pointer;
 }
 
+.alpha-primary-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+  box-shadow: none;
+}
+
 .alpha-secondary-btn {
-  border: 1px solid rgba(234, 236, 240, 0.2);
+  border: 1px solid rgba(234, 236, 240, 0.24);
   background: transparent;
   color: var(--alpha-grey);
 }
 
 .alpha-retry-btn {
-  border-color: rgba(254, 127, 45, 0.5);
+  border-color: rgba(254, 127, 45, 0.55);
   color: var(--alpha-orange);
 }
 
 .alpha-retry-btn:hover {
-  background: rgba(254, 127, 45, 0.1);
+  background: rgba(254, 127, 45, 0.12);
 }
 
 .alpha-primary-btn {
   border: 0;
   background: var(--alpha-orange);
   color: var(--alpha-black);
-  box-shadow: 0 6px 16px rgba(254, 127, 45, 0.24);
+  box-shadow: 0 6px 16px rgba(254, 127, 45, 0.25);
 }
 
-/* Centered Speech-Bubble Tooltip */
-.alpha-tooltip {
-  position: absolute;
-  bottom: calc(100% + 8px);
-  left: 50%;
-  transform: translate(-50%, 4px);
+.alpha-primary-btn:hover {
+  background: var(--alpha-blue);
   color: var(--alpha-grey);
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 11px;
-  font-weight: 500;
-  white-space: nowrap;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-  pointer-events: none;
-  opacity: 0;
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  align-items: center;
-  z-index: 10000;
 }
 
-.alpha-tooltip.show {
-  opacity: 1;
-  transform: translate(-50%, 0);
-}
-
-/* Centered Downward Arrow */
-.alpha-tooltip::after {
-  content: "";
+.alpha-sr-only {
   position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 5px;
-  border-style: solid;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
-/* Success Speech Bubble */
-.alpha-tooltip.type-success {
-  background: rgba(35, 61, 77, 0.98);
-  border: 1px solid rgba(234, 236, 240, 0.1);
-}
-.alpha-tooltip.type-success::after {
-  border-color: rgba(35, 61, 77, 0.98) transparent transparent transparent;
+@media (max-height: 620px) {
+  .alpha-panel {
+    padding: 12px;
+  }
+
+  .alpha-preview {
+    min-height: 108px;
+    max-height: 30vh;
+  }
+
+  .alpha-meta {
+    margin-bottom: 10px;
+  }
 }
 
-/* Error Speech Bubble */
-.alpha-tooltip.type-error {
-  background: var(--alpha-orange);
-  color: var(--alpha-black);
-  border: 1px solid rgba(0, 0, 0, 0.35);
-  box-shadow: 0 6px 20px rgba(254, 127, 45, 0.25);
-}
-.alpha-tooltip.type-error::after {
-  border-color: var(--alpha-orange) transparent transparent transparent;
+@media (prefers-reduced-motion: reduce) {
+  .alpha-launcher,
+  .alpha-panel {
+    transition: none;
+  }
+
+  .alpha-container[data-state='thinking'] .alpha-launcher-icon {
+    animation: none;
+  }
 }
